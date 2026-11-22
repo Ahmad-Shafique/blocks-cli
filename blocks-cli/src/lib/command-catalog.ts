@@ -3589,6 +3589,18 @@ export const commandCatalog: readonly CommandEntry[] = [
     ]
   },
   {
+    "name": "plan",
+    "family": "plan",
+    "summary": "Compare the project file (blocks.project.yaml, plus an optional per-environment overlay) with the live project and print the difference. Data area only in this version.",
+    "details": "Read-only: sends only GET requests (any other request is refused before it leaves the machine) and writes nothing. Reads blocks.project.yaml/.yml/.json next to blocks.json, or --file; --env <name> merges blocks.project.<name>.yaml over it (mappings merge, lists and scalars replace). The file is checked against schema/blocks.project.schema.json; unknown keys, duplicate keys, YAML anchors/aliases and literal secrets fail it. Secrets are written as { secretRef: NAME }; plan lists the names and never reads a value. ${env:NAME} is allowed for non-secret values only. Compares data schemas, policies and security entries with the same readers the data commands use: + create, ~ update (changed field names), = unchanged, - not in file (reported only; never deleted), ! blocked. Exit code 0 = no changes, 2 = changes (create, update or blocked), 1 = error. --json prints the plan as a document.",
+    "scope": "project",
+    "mutating": false,
+    "flags": [
+      "env",
+      "file"
+    ]
+  },
+  {
     "name": "projects create",
     "family": "projects",
     "summary": "Create a new Blocks project via /os/v4/Project/Create using the account token (no project needs to be selected yet).",
