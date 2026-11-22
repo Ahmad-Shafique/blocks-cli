@@ -120,9 +120,9 @@ export function toPortablePolicy(raw: Record<string, unknown>, fallbackSchemaNam
   return policy;
 }
 
-export async function readSchemaFiles(): Promise<Array<{ file: string; schema: SchemaDocument }>> {
-  const workspace = await readWorkspaceConfig();
-  const { schemas } = pathsFromWorkspace(workspace);
+/** Reads every schema file. `folder` defaults to blocks.json's data.schemas (`blocks plan` passes the project file's). */
+export async function readSchemaFiles(folder?: string): Promise<Array<{ file: string; schema: SchemaDocument }>> {
+  const schemas = folder ?? pathsFromWorkspace(await readWorkspaceConfig()).schemas;
   const files = await readdir(schemas).catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") return [];
     throw error;
@@ -150,9 +150,9 @@ export async function writeSchemaFile(schema: SchemaDocument): Promise<string> {
   return path;
 }
 
-export async function readRulesFile(): Promise<Record<string, unknown>> {
-  const workspace = await readWorkspaceConfig();
-  const { rules } = pathsFromWorkspace(workspace);
+/** Reads the rules file. `path` defaults to blocks.json's data.rules (`blocks plan` passes the project file's). */
+export async function readRulesFile(path?: string): Promise<Record<string, unknown>> {
+  const rules = path ?? pathsFromWorkspace(await readWorkspaceConfig()).rules;
   return JSON.parse(await readFile(rules, "utf8")) as Record<string, unknown>;
 }
 
@@ -212,9 +212,9 @@ export function verificationStatusName(value: unknown): string | undefined {
 }
 
 // ConfigureSchemaSecurityRequest enums in blocks-data, sent as ordinals.
-const SECURITY_OPERATIONS = ["READ", "WRITE", "EDIT", "DELETE"];
-const SECURITY_POLICY_TYPES = ["RLS", "CLS"];
-const SECURITY_ACCESS_LEVELS = ["Inherited", "User", "Public", "Custom"];
+export const SECURITY_OPERATIONS = ["READ", "WRITE", "EDIT", "DELETE"];
+export const SECURITY_POLICY_TYPES = ["RLS", "CLS"];
+export const SECURITY_ACCESS_LEVELS = ["Inherited", "User", "Public", "Custom"];
 
 const isIndex = (value: unknown, length: number): boolean =>
   typeof value === "number" && Number.isInteger(value) && value >= 0 && value < length;

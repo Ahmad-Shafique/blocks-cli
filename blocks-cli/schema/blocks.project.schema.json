@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SELISE Blocks project file",
+  "description": "The contract for blocks.project.yaml / blocks.project.json and their per-environment overlays (blocks.project.<env>.yaml). Decision 0007. A section that is absent is not managed. Unknown keys are an error. Secret values never appear in the file: a secret is written as { secretRef: NAME }.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion"],
+  "properties": {
+    "$schema": {
+      "description": "Optional pointer to this schema, for editors.",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "description": "File format version. This CLI knows version 1 and refuses a newer one.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tenantId": {
+          "description": "The project (tenant) the file describes. May be \"${env:NAME}\". Omitted: the workspace's own project (blocks.json, or --project).",
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "description": "A label for people; not sent to the server.",
+          "type": "string"
+        }
+      }
+    },
+    "data": {
+      "description": "Data Gateway schemas and access rules. Paths are relative to the base project file. Omitted keys fall back to blocks.json (data.schemas, data.rules) and then to blocks/data/schemas and blocks/data/rules.json.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemas": {
+          "description": "Folder of schema files, one per schema, as 'blocks data schema pull' writes them.",
+          "type": "string",
+          "minLength": 1
+        },
+        "rules": {
+          "description": "Rules file, as 'blocks data rules pull' writes it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "newSchemaAccess": {
+          "description": "Access a newly created schema gets (same meaning as 'data sync --access').",
+          "enum": ["user", "public"]
+        }
+      }
+    },
+    "secrets": {
+      "description": "Names of Blocks Secrets that must exist. Values are never in this file.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/secretName" }
+        }
+      }
+    },
+    "iam": { "$ref": "#/$defs/reservedArea" },
+    "auth": { "$ref": "#/$defs/reservedArea" },
+    "mail": { "$ref": "#/$defs/reservedArea" },
+    "storage": { "$ref": "#/$defs/reservedArea" },
+    "localization": { "$ref": "#/$defs/reservedArea" },
+    "logic": { "$ref": "#/$defs/reservedArea" }
+  },
+  "$defs": {
+    "secretName": {
+      "description": "A Blocks Secrets name, as 'blocks secrets list' shows it.",
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+    },
+    "secretRef": {
+      "description": "A reference to a Blocks Secret. Resolved in memory when a value is needed, never stored or printed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secretRef"],
+      "properties": {
+        "secretRef": { "$ref": "#/$defs/secretName" }
+      }
+    },
+    "reservedArea": {
+      "description": "An area 'blocks plan' does not compare yet (0007 build steps 3 and 4 define its keys). It is still checked for literal secrets.",
+      "type": "object"
+    }
+  }
+}

@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased (local patch series, decision 0007 step 1)
+
+### Added
+
+- **`blocks plan` -- compare a project file with the live project (data area).**
+  The project file is `blocks.project.yaml` (or `.yml` / `.json`) next to
+  `blocks.json`, checked against `schema/blocks.project.schema.json`, with one
+  optional overlay per environment (`--env prod` merges `blocks.project.prod.yaml`).
+  The YAML reader is a strict built-in subset (no new dependency): duplicate keys,
+  anchors, aliases, merge keys, tags and block scalars are rejected. Secrets are
+  written only as `{ secretRef: NAME }`; a literal secret (secret-named field,
+  known token shape, or high-entropy string) fails the file without printing it.
+  `plan` is read-only -- a request context refuses any non-GET request before it is
+  sent -- and exits 0 (no changes), 2 (changes) or 1 (error).
+
+### Changed
+
+- `data schema pull` and `data rules pull` read through the shared
+  `lib/data-readers.ts` (`fetchAllSchemas`, `fetchSchemaPolicies`), which `plan`
+  reuses. `data rules pull` now pages through schemas past 500. Requests are otherwise unchanged.
+
 ## 0.11.0
 
 ### Added

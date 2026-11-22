@@ -1,5 +1,6 @@
 import { getAccountSession, getImpersonatedProjectSession } from "./auth.js";
 import { readConfig, resolveAccountProfile } from "./config.js";
+import { assertRequestAllowed } from "./read-only-requests.js";
 import { redactSecrets } from "./redact.js";
 
 type RequestOptions = {
@@ -20,6 +21,8 @@ type RequestOptions = {
 };
 
 export async function blocksRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  // Inside `runReadOnly` (blocks plan) only reads may leave the machine.
+  assertRequestAllowed(options.method ?? (options.body === undefined ? "GET" : "POST"), path);
   const config = await readConfig();
   const { name: accountName, profile } = await resolveAccountProfile(config, options.accountName);
   const baseUrl = options.apiUrl ?? profile.apiUrl;

@@ -72,6 +72,7 @@ import {
 import { iamMe } from "./commands/iam/me.js";
 import { init } from "./commands/init.js";
 import { pull } from "./commands/pull.js";
+import { plan } from "./commands/config/plan.js";
 import { localizationAssistantTranslationSuggestion } from "./commands/localization/assistant/translation-suggestion.js";
 import { localizationConfigGetWebhook } from "./commands/localization/config/get-webhook.js";
 import { localizationConfigSaveWebhook } from "./commands/localization/config/save-webhook.js";
@@ -317,6 +318,7 @@ const commands: Partial<Record<string, CommandHandler>> = {
   "doctor": doctor,
   "init": init,
   "pull": pull,
+  "plan": plan,
   "login": login,
   "logout": logout,
   "projects:create": createProject,
@@ -806,6 +808,13 @@ Setup and health:
     pulledAt, cliVersion). Secrets are redacted to *** unless --include-secrets.
     Refuses a --project other than the workspace's own unless --force. A failing
     service is reported and exits non-zero; the rest are still written.
+
+  blocks plan [--file <path>] [--env <name>] [--json]
+    Compare the project file (blocks.project.yaml next to blocks.json, plus
+    blocks.project.<env>.yaml with --env) with the live project. Data area only
+    for now. Read-only: GET requests only, nothing written. Secrets are
+    { secretRef: NAME } references; a literal secret fails the plan.
+    Exit code 0 = no changes, 2 = changes, 1 = error.
 
   blocks doctor [--json]
     Inspect cached CLI version, Node.js, OIDC config, token, optional project,
