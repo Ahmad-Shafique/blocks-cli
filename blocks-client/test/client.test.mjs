@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BlocksApiError, createBlocksClient } from "../dist/index.js";
+import { BLOCKS_API_VERSION, BlocksApiError, createBlocksClient } from "../dist/index.js";
 
 test("creates a framework-neutral client", async () => {
   const calls = [];
@@ -724,4 +724,24 @@ test("BlocksApiError puts validation reasons in the message and keeps existing m
   const error = new BlocksApiError(422, "Unprocessable Entity", { errors: { A: "x" } });
   assert.equal(error.status, 422);
   assert.deepEqual(error.body, { errors: { A: "x" } });
+});
+
+test("sends the Blocks-Version header on every request, the baseline by default", async () => {
+  const seen = [];
+  const blocks = createBlocksClient({
+    apiUrl: "https://api.seliseblocks.com",
+    fetch: async (url, init) => { seen.push(Object.fromEntries(init.headers)); return jsonResponse({}); },
+    xBlocksKey: "tenant-1"
+  });
+  await blocks.http.request("/iam/v4/iam/me", { auth: false });
+  assert.equal(seen[0]["blocks-version"], BLOCKS_API_VERSION);
+  assert.match(BLOCKS_API_VERSION, /^\d{4}-\d{2}-\d{2}$/);
+  const pinned = createBlocksClient({
+    apiUrl: "https://api.seliseblocks.com",
+    blocksVersion: "2027-01-01",
+    fetch: async (url, init) => { seen.push(Object.fromEntries(init.headers)); return jsonResponse({}); },
+    xBlocksKey: "tenant-1"
+  });
+  await pinned.http.request("/iam/v4/iam/me", { auth: false });
+  assert.equal(seen[1]["blocks-version"], "2027-01-01");
 });

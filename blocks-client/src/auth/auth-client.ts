@@ -480,6 +480,7 @@ export class BlocksAuthenticationClient {
     const headers = new Headers(options.headers);
     headers.set("Accept", "application/json");
     headers.set("x-blocks-key", this.clientConfig.xBlocksKey);
+    headers.set("Blocks-Version", this.clientConfig.blocksVersion);
 
     if (options.auth !== false) {
       const token = await this.accessToken();

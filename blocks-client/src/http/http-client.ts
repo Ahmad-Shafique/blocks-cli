@@ -35,6 +35,7 @@ export class BlocksHttpClient {
     const attempt = async (accessTokenOverride?: string): Promise<Response> => {
       const headers = new Headers(options.headers);
       headers.set("x-blocks-key", this.config.xBlocksKey);
+      headers.set("Blocks-Version", this.config.blocksVersion);
 
       if (options.body !== undefined && !rawBody && !headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");

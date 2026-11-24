@@ -1,4 +1,4 @@
-export { createBlocksClient } from "./client.js";
+export { BLOCKS_API_VERSION, createBlocksClient } from "./client.js";
 export { BlocksAuthenticationClient } from "./auth/auth-client.js";
 export { BlocksDataClient } from "./data/data-client.js";
 export type {
