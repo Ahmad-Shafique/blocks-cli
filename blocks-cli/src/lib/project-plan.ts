@@ -19,10 +19,10 @@ export type PlanAction = "create" | "update" | "unchanged" | "not-in-file" | "bl
 
 export type PlanItem = {
   action: PlanAction;
-  area: "data" | "iam" | "localization";
+  area: "data" | "iam" | "auth" | "localization";
   /** Changed field paths for an update (names only, never values). */
   changes?: string[];
-  kind: "schema" | "policy" | "security" | "permission" | "role" | "dictionary";
+  kind: "schema" | "policy" | "security" | "permission" | "role" | "dictionary" | "config";
   name: string;
   /** Why an item is blocked, or a note on a create or update. */
   note?: string;

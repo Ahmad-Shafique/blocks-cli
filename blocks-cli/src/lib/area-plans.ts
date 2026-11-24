@@ -1,3 +1,4 @@
+import { computeAuthPlan, type AuthPlan } from "./auth-config.js";
 import { computeDataPlan, type DataPlan } from "./data-plan.js";
 import { computeIamPlan, type IamPlan } from "./iam-config.js";
 import { computeLocalizationPlan, readDictionaryTargets, type LocalizationPlan } from "./localization-config.js";
@@ -14,13 +15,14 @@ export type ManagedArea = (typeof MANAGED_AREAS)[number];
 
 export type AreaPlans = {
   areas: ManagedArea[];
+  auth?: AuthPlan;
   data?: DataPlan;
   iam?: IamPlan;
   items: PlanItem[];
   localization?: LocalizationPlan;
 };
 
-export const AREA_ORDER: readonly ManagedArea[] = ["iam", "data", "localization"];
+export const AREA_ORDER: readonly ManagedArea[] = ["iam", "data", "auth", "localization"];
 
 export function managedAreas(document: LoadedProjectFile["document"]): ManagedArea[] {
   return AREA_ORDER.filter((area) => document[area] !== undefined);
@@ -43,6 +45,10 @@ export async function computeAreaPlans(
   if (document.data) {
     plans.data = await computeDataPlan(loaded, flags, tenant, notes);
     plans.items.push(...plans.data.items);
+  }
+  if (document.auth?.config) {
+    plans.auth = await computeAuthPlan(flags, tenant, document.auth.config);
+    plans.items.push(...plans.auth.items);
   }
   if (document.localization) {
     const workspace = await findWorkspace();
