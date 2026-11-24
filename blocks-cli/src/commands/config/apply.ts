@@ -10,6 +10,7 @@ import { reloadDataGateway } from "../../lib/data-gateway.js";
 import { CliActionableError } from "../../lib/errors.js";
 import { addRolePermissions, iamIdsBySlugAndName, rolesParentsFirst, writePermission, writeRole } from "../../lib/iam-config.js";
 import { regenerateModule, writeDictionary } from "../../lib/localization-config.js";
+import { writeAuthConfig } from "../../lib/auth-config.js";
 import { loadProjectFile, MANAGED_AREAS, RESERVED_AREAS } from "../../lib/project-file.js";
 import {
   hasChanges,
@@ -23,14 +24,15 @@ import { runReadOnly } from "../../lib/read-only-requests.js";
 import { findWorkspace, parseCommand, selectedProject } from "../../lib/workspace.js";
 
 /**
- * `blocks apply` (decision 0007 §5, build steps 2 and 3: the data, iam and localization
+ * `blocks apply` (decision 0007 §5, build steps 2 to 4: the data, iam, auth and localization
  * areas). A dry run unless `--write` is given: `--write` is its own flag, separate from
  * `--yes`, and nothing else turns a write on. `--write --dry-run` is a dry run. The dry run
  * and the plan that decides what to write both run inside `runReadOnly`, so a bug there
  * fails before a request leaves the machine.
  *
  * Areas are written in this order: iam (permissions, roles parents first, role permissions
- * added), data (schemas, security entries, policies, then one gateway reload), localization
+ * added), data (schemas, security entries, policies, then one gateway reload), auth (the
+ * configuration document, saved once), localization
  * (dictionaries saved unpublished, then one UILM regeneration per touched module).
  *
  * Exit codes: 0 nothing to do (or applied and the project now matches), 2 a dry run found
@@ -215,11 +217,11 @@ async function writeAll(
   journal: Journal,
   logsDir: string
 ): Promise<WriteOutcome> {
-  const counters = { data: { wrote: 0 }, iam: { wrote: 0 }, localization: { wrote: 0 } };
+  const counters = { auth: { wrote: 0 }, data: { wrote: 0 }, iam: { wrote: 0 }, localization: { wrote: 0 } };
   const outcome = (failure?: Failure): WriteOutcome => ({
     dataWrote: counters.data.wrote,
     ...(failure ? { failure } : {}),
-    wrote: counters.data.wrote + counters.iam.wrote + counters.localization.wrote
+    wrote: counters.data.wrote + counters.iam.wrote + counters.auth.wrote + counters.localization.wrote
   });
   const itemsOf = (area: PlanItem["area"]) => toWrite.filter((item) => item.area === area);
 
@@ -229,6 +231,10 @@ async function writeAll(
   }
   if (plans.data) {
     const failure = await writeData(plans.data, itemsOf("data"), tenant, flags, makeRunner("data", journal, logsDir, counters.data));
+    if (failure) return outcome(failure);
+  }
+  if (plans.auth) {
+    const failure = await writeAuth(plans, itemsOf("auth"), tenant, flags, makeRunner("auth", journal, logsDir, counters.auth));
     if (failure) return outcome(failure);
   }
   if (plans.localization) {
@@ -268,6 +274,14 @@ async function writeIam(plans: AreaPlans, toWrite: PlanItem[], tenant: string, f
     if (item.action === "create") ids = await iamIdsBySlugAndName(flags, tenant);
   }
   return undefined;
+}
+
+/** The auth configuration: one document, merged over the stored one and saved once. */
+async function writeAuth(plans: AreaPlans, toWrite: PlanItem[], tenant: string, flags: Flags, run: Runner): Promise<Failure> {
+  const auth = plans.auth;
+  const item = toWrite.find((candidate) => candidate.kind === "config");
+  if (!auth || !item) return undefined;
+  return run(item, () => writeAuthConfig(auth.desired, flags, tenant));
 }
 
 /** Saves each differing dictionary unpublished, and remembers which modules need a UILM regeneration. */

@@ -78,7 +78,37 @@
         }
       }
     },
-    "auth": { "$ref": "#/$defs/reservedArea" },
+    "auth": {
+      "description": "Authentication settings (0007 build step 4). Only config is managed so far: the AuthController document (token lifetimes, lockout, password policy, OIDC on or off). Only the keys you state are compared and written. OIDC clients, identity providers, mail, storage and workflows follow in later steps.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "absoluteRefreshTokenMinutes": { "type": "integer", "minimum": 0 },
+            "accessTokenMinutes": { "type": "integer", "minimum": 0 },
+            "accountActionBaseUrl": { "type": "string", "minLength": 1 },
+            "accountLockDurationMinutes": { "type": "integer", "minimum": 0 },
+            "logoutOnPasswordChange": { "type": "boolean" },
+            "oidcEnabled": { "type": "boolean" },
+            "passwordPolicyMaxLength": { "type": "integer", "minimum": 0 },
+            "passwordPolicyMessage": { "type": "string" },
+            "passwordPolicyMinLength": { "type": "integer", "minimum": 0 },
+            "passwordPolicyRequireLowercase": { "type": "boolean" },
+            "passwordPolicyRequireNumbers": { "type": "boolean" },
+            "passwordPolicyRequireSpecialChars": { "type": "boolean" },
+            "passwordPolicyRequireUppercase": { "type": "boolean" },
+            "passwordStrengthMessage": { "type": "string" },
+            "passwordStrengthRegex": { "type": "string" },
+            "refreshTokenMinutes": { "type": "integer", "minimum": 0 },
+            "rememberMeRefreshTokenMinutes": { "type": "integer", "minimum": 0 },
+            "wrongAttemptsToLock": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
     "mail": { "$ref": "#/$defs/reservedArea" },
     "storage": { "$ref": "#/$defs/reservedArea" },
     "localization": {
