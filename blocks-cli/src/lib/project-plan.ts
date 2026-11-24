@@ -205,6 +205,18 @@ function accessLevelName(value: unknown): string | undefined {
   return undefined;
 }
 
+/** The plan name of a security entry (also how `apply` finds the entry behind a plan item). */
+export function securityEntryName(entry: Record<string, unknown>): string {
+  const operation = SECURITY_OPERATIONS[entry.operation as number] ?? String(entry.operation);
+  const policyType = SECURITY_POLICY_TYPES[entry.policyType as number] ?? String(entry.policyType);
+  const desired = SECURITY_ACCESS_LEVELS[entry.accessLevel as number] ?? String(entry.accessLevel);
+  const schemaName = typeof entry.schemaName === "string" && entry.schemaName ? entry.schemaName : undefined;
+  const schemaId = typeof entry.schemaId === "string" && entry.schemaId ? entry.schemaId : undefined;
+  const fieldNames = Array.isArray(entry.fieldNames) ? entry.fieldNames.filter((item): item is string => typeof item === "string") : [];
+  const target = schemaName ?? `id:${schemaId}`;
+  return `${target} ${operation} ${policyType}${policyType === "CLS" && fieldNames.length ? ` [${fieldNames.join(", ")}]` : ""} = ${desired}`;
+}
+
 /**
  * Security entries set a schema's (RLS) or its fields' (CLS) access level per operation
  * (blocks-data DataAccessService.ConfigureSchemaAccess / ConfigureFieldAccess). The live
@@ -224,8 +236,7 @@ export function diffSecurity(
     const schemaName = typeof entry.schemaName === "string" && entry.schemaName ? entry.schemaName : undefined;
     const schemaId = typeof entry.schemaId === "string" && entry.schemaId ? entry.schemaId : undefined;
     const fieldNames = Array.isArray(entry.fieldNames) ? entry.fieldNames.filter((item): item is string => typeof item === "string") : [];
-    const target = schemaName ?? `id:${schemaId}`;
-    const name = `${target} ${operation} ${policyType}${policyType === "CLS" && fieldNames.length ? ` [${fieldNames.join(", ")}]` : ""} = ${desired}`;
+    const name = securityEntryName(entry);
 
     const schema = live.find((item) => (schemaName ? item.schemaName === schemaName : item.id === schemaId));
     if (!schema) {

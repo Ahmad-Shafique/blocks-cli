@@ -72,6 +72,7 @@ import {
 import { iamMe } from "./commands/iam/me.js";
 import { init } from "./commands/init.js";
 import { pull } from "./commands/pull.js";
+import { apply } from "./commands/config/apply.js";
 import { plan } from "./commands/config/plan.js";
 import { localizationAssistantTranslationSuggestion } from "./commands/localization/assistant/translation-suggestion.js";
 import { localizationConfigGetWebhook } from "./commands/localization/config/get-webhook.js";
@@ -319,6 +320,7 @@ const commands: Partial<Record<string, CommandHandler>> = {
   "init": init,
   "pull": pull,
   "plan": plan,
+  "apply": apply,
   "login": login,
   "logout": logout,
   "projects:create": createProject,
@@ -815,6 +817,17 @@ Setup and health:
     for now. Read-only: GET requests only, nothing written. Secrets are
     { secretRef: NAME } references; a literal secret fails the plan.
     Exit code 0 = no changes, 2 = changes, 1 = error.
+
+  blocks apply [--write] [--yes] [--file <path>] [--env <name>] [--tenant <id>] [--json]
+    Make the live project match the project file. Data area only for now. A dry
+    run unless --write is given (--write is not --yes: it still asks once, and
+    --write --yes skips the question). Writes only what plan shows as create or
+    update, in order: schemas, security entries, policies, then one gateway
+    reload. Nothing is deleted. Refuses a file whose tenant differs from
+    blocks.json unless --tenant names it; an agent (BLOCKS_AGENT_TOKEN or
+    BLOCKS_AGENT=1) may write only to a local stack. Writes logs/blocks-apply-<time>.json
+    (names, actions, results; no secrets) and plans again at the end.
+    Exit code 0 = done or nothing to do, 2 = dry run found changes, 1 = error.
 
   blocks doctor [--json]
     Inspect cached CLI version, Node.js, OIDC config, token, optional project,

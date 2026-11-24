@@ -18,6 +18,20 @@ export type CommandEntry = {
 
 export const commandCatalog: readonly CommandEntry[] = [
   {
+    "name": "apply",
+    "family": "apply",
+    "summary": "Make the live project match the project file. A dry run unless --write is given. Data area only in this version.",
+    "details": "Dry run by default: it plans exactly as 'blocks plan' does and says 'Dry run: nothing was changed. Re-run with --write to apply.' --write is its own flag, separate from --yes (--write still asks once; --write --yes skips the question; --write with --dry-run is a dry run). Writes only resources the plan shows as create or update, in order: data schemas, security entries, policies, then one Data Gateway reload after every write succeeded. Never deletes (items 'not in file' stay). Refuses to write when any item is blocked, when the file's tenant differs from blocks.json's project (unless --tenant names it), and when the caller is an agent (BLOCKS_AGENT_TOKEN is set, or BLOCKS_AGENT is 1) and the target is not a local stack. Writes a journal logs/blocks-apply-<time>.json next to blocks.json (resource, action, result; no secret values, no response bodies). On a failed step it stops, reports where, and exits 1; run it again after the fix and finished resources are skipped, and a pending gateway reload is done. After writing it plans again and reports whether the project now matches. Exit code 0 = applied or nothing to do, 2 = a dry run found changes, 1 = error, failed step, or the project still differs. Mutating with --write.",
+    "scope": "project",
+    "mutating": true,
+    "flags": [
+      "env",
+      "file",
+      "tenant",
+      "write"
+    ]
+  },
+  {
     "name": "auth client-credentials delete",
     "family": "auth",
     "summary": "Delete a machine-to-machine client credential.",
