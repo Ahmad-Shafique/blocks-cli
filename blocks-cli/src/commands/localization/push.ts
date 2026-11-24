@@ -28,7 +28,7 @@ type Dictionary = Record<string, string>;
  * tens of minutes. `once` saves every key unpublished then regenerates the touched module a
  * single time -- the same end state in one regeneration instead of hundreds.
  */
-type PublishMode = "once" | "per-key" | "none";
+export type PublishMode = "once" | "per-key" | "none";
 
 function parsePublishMode(flags: Flags): PublishMode {
   const raw = stringFlag(flags, "publish", { defaultValue: "once" });
@@ -105,7 +105,7 @@ export async function localizationPush(argv: string[]): Promise<void> {
  * first and upsert one culture into each, carrying the rest of the stored record (routes,
  * glossary ids, context) so those are not defaulted away either.
  */
-async function mergedKeys(
+export async function mergedKeys(
   dictionary: Dictionary,
   moduleId: string,
   language: string,

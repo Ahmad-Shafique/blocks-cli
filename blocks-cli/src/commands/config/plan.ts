@@ -1,7 +1,9 @@
 import { stringFlag } from "../../lib/args.js";
-import { computeDataPlan, displayPath } from "../../lib/data-plan.js";
+import { computeAreaPlans } from "../../lib/area-plans.js";
+import { displayPath } from "../../lib/data-plan.js";
 import { CliActionableError } from "../../lib/errors.js";
-import { loadProjectFile, RESERVED_AREAS } from "../../lib/project-file.js";
+import { managedAreas } from "../../lib/area-plans.js";
+import { loadProjectFile, MANAGED_AREAS, RESERVED_AREAS } from "../../lib/project-file.js";
 import {
   hasChanges,
   renderPlanLines,
@@ -14,7 +16,7 @@ import { parseCommand, selectedProject } from "../../lib/workspace.js";
 
 /**
  * `blocks plan`: compare the project file with the live project and print the difference
- * (decision 0007 §4; build step 1 covers the data area only). Read-only: it runs inside
+ * (decision 0007 §4; it covers the data, iam and localization areas). Read-only: it runs inside
  * `runReadOnly`, so any non-GET request throws before it is sent, and it writes nothing.
  *
  * Exit codes (as `terraform plan -detailed-exitcode`): 0 no changes, 2 changes, 1 error.
@@ -36,7 +38,8 @@ async function planReadOnly(argv: string[]): Promise<void> {
   let tenant: string | undefined;
   const notes: string[] = [];
 
-  if (document.data) {
+  const areas = managedAreas(document);
+  if (areas.length) {
     const fileTenant = document.project?.tenantId;
     const flagTenant = stringFlag(flags, "project");
     if (fileTenant && flagTenant && fileTenant !== flagTenant) {
@@ -47,9 +50,9 @@ async function planReadOnly(argv: string[]): Promise<void> {
       );
     }
     tenant = fileTenant || await selectedProject(flags);
-    items.push(...(await computeDataPlan(loaded, flags, tenant, notes)).items);
+    items.push(...(await computeAreaPlans(loaded, flags, tenant, notes)).items);
   } else {
-    notes.push("The file manages no area that plan compares yet (data); nothing was read from the server.");
+    notes.push("The file manages no area that plan compares yet (data, iam, localization); nothing was read from the server.");
   }
 
   const summary = summarize(items);
@@ -76,12 +79,13 @@ async function planReadOnly(argv: string[]): Promise<void> {
   } else {
     const files = [result.files.base, ...(loaded.overlayFile ? [displayPath(loaded.overlayFile)] : [])].join(" + ");
     console.log(`blocks plan: ${files} (schemaVersion ${document.schemaVersion})${tenant ? `, tenant ${tenant}` : ""}`);
-    if (document.data) {
-      console.log("Area data");
-      for (const line of renderPlanLines(items)) console.log(line);
-      if (items.length === 0) console.log("  (no schemas or rules in the file or the project)");
+    for (const area of areas) {
+      console.log(`Area ${area}`);
+      const lines = renderPlanLines(items.filter((item) => item.area === area));
+      for (const line of lines) console.log(line);
+      if (lines.length === 0) console.log("  (nothing in the file or the project)");
     }
-    if (notCompared.length) console.log(`Not compared yet (plan covers data only): ${notCompared.join(", ")}`);
+    if (notCompared.length) console.log(`Not compared yet (plan covers ${MANAGED_AREAS.join(", ")} only): ${notCompared.join(", ")}`);
     if (loaded.secretRefs.length) {
       console.log(`Secret references: ${[...new Set(loaded.secretRefs.map((ref) => ref.name))].join(", ")} (names only; values are resolved in memory by apply, never by plan)`);
     }
