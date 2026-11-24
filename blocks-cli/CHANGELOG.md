@@ -1,6 +1,20 @@
 # Changelog
 
-## Unreleased (local patch series, decision 0007 step 1)
+## Unreleased (local patch series, decision 0007 steps 1 and 2)
+
+### Added (step 2)
+
+- **`blocks apply` -- make the live project match the project file (data area).**
+  A dry run unless `--write` is given; `--write` is separate from `--yes`
+  (`--write --dry-run` is a dry run). It writes only what `plan` shows as create or
+  update (schemas, then security entries, then policies), reloads the Data Gateway
+  once after every write succeeded, and never deletes. It refuses a file whose
+  tenant differs from `blocks.json` unless `--tenant` names it, refuses blocked
+  items, and refuses an agent (`BLOCKS_AGENT_TOKEN` or `BLOCKS_AGENT=1`) writing to
+  anything but a local stack. Each write run keeps `logs/blocks-apply-<time>.json`
+  (resource, action, result; no secrets or response bodies); after a failed step the
+  next run skips finished resources and does a pending reload. It plans again at the
+  end and says whether the project now matches.
 
 ### Added
 
