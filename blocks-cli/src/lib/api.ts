@@ -1,5 +1,6 @@
 import { getAccountSession, getImpersonatedProjectSession } from "./auth.js";
 import { readConfig, resolveAccountProfile } from "./config.js";
+import { BLOCKS_API_VERSION, recordEchoedApiVersion } from "./api-version.js";
 import { assertRequestAllowed } from "./read-only-requests.js";
 import { redactSecrets } from "./redact.js";
 
@@ -40,7 +41,8 @@ export async function blocksRequest<T>(path: string, options: RequestOptions = {
 
   const isFormData = options.body instanceof FormData;
   const baseHeaders: Record<string, string> = {
-    Accept: "application/json"
+    Accept: "application/json",
+    "Blocks-Version": BLOCKS_API_VERSION
   };
   if (options.body !== undefined && !isFormData) baseHeaders["Content-Type"] = "application/json";
 
@@ -102,6 +104,8 @@ export async function blocksRequest<T>(path: string, options: RequestOptions = {
     // retry blindly here because GET is idempotent.
     response = await send(false);
   }
+
+  await recordEchoedApiVersion(response.headers.get("Blocks-Version"));
 
   const text = await response.text();
   const data = parseJson(text);

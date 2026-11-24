@@ -1,4 +1,5 @@
 import { access } from "node:fs/promises";
+import { BLOCKS_API_VERSION, compareApiVersion, readEchoedApiVersion } from "../lib/api-version.js";
 import { configPath, readConfig, resolveAccountProfile } from "../lib/config.js";
 import { parseFlags, stringFlag } from "../lib/args.js";
 import { writeOutput } from "../lib/output.js";
@@ -33,6 +34,7 @@ export async function doctor(argv: string[] = []): Promise<void> {
         ? `${cliVersion} (latest ${latestCliVersion}; ask the user before running 'npm install -g @seliseblocks/cli-os@latest')`
         : `${cliVersion}${latestCliVersion ? ` (latest ${latestCliVersion})` : " (latest unknown: no cached registry check yet)"}`
     },
+    { label: "API version", ...compareApiVersion(BLOCKS_API_VERSION, (await readEchoedApiVersion())?.version) },
     { label: "Node.js >= 20", ok: Number(process.versions.node.split(".")[0]) >= 20, detail: process.version },
     { label: "OIDC account configured", ok: Object.keys(config.accounts).length > 0, detail: config.activeAccount ?? "missing" }
   ];

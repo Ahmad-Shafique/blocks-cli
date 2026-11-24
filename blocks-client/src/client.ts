@@ -69,7 +69,16 @@ export type BlocksClientConfig = {
    * Required Blocks tenant key. The SDK sends this as the `x-blocks-key` header on every request.
    */
   xBlocksKey: string;
+
+  /**
+   * Optional dated API version (`YYYY-MM-DD`) sent as the `Blocks-Version` header on every request
+   * (decisions/0003-api-versioning.md). Default: `BLOCKS_API_VERSION`, the baseline this SDK was built against.
+   */
+  blocksVersion?: string;
 };
+
+/** The `Blocks-Version` value this SDK sends unless `blocksVersion` is set: the platform's baseline version. */
+export const BLOCKS_API_VERSION = "2026-11-25";
 
 /**
  * The resolved configuration a client exposes on `blocks.config`: the settings
@@ -106,6 +115,7 @@ export type BlocksResolvedConfig = {
   onUnauthorized?: () => Promise<string | undefined> | string | undefined;
   oidc?: BlocksOidcConfig & { redirectUri: string; scope: string };
   xBlocksKey: string;
+  blocksVersion: string;
 };
 
 /** @deprecated Renamed to `BlocksResolvedConfig` for consistency with the other exported names. */
@@ -151,7 +161,8 @@ function normalizeConfig(config: BlocksClientConfig): BlocksResolvedConfig {
       redirectUri: config.oidc.redirectUri ?? browserRedirectUri(),
       scope: config.oidc.scope ?? "openid profile"
     } : undefined,
-    xBlocksKey: config.xBlocksKey
+    xBlocksKey: config.xBlocksKey,
+    blocksVersion: config.blocksVersion ?? BLOCKS_API_VERSION
   };
 }
 
