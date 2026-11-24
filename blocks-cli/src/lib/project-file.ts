@@ -27,14 +27,36 @@ export const PROJECT_FILE_BASENAME = "blocks.project";
 export const PROJECT_FILE_EXTENSIONS = [".yaml", ".yml", ".json"] as const;
 export const SUPPORTED_SCHEMA_VERSION = 1;
 
-export const MANAGED_AREAS = ["data"] as const;
-export const RESERVED_AREAS = ["iam", "auth", "mail", "storage", "localization", "logic"] as const;
+export const MANAGED_AREAS = ["data", "iam", "localization"] as const;
+export const RESERVED_AREAS = ["auth", "mail", "storage", "logic"] as const;
+
+export type IamPermissionEntry = {
+  dependentPermissions?: string[];
+  description?: string;
+  name: string;
+  resource?: string;
+  resourceGroup?: string;
+  severity?: number;
+  tags?: string[];
+  type?: number;
+};
+export type IamRoleEntry = {
+  canCreateOwn?: boolean;
+  description?: string;
+  name?: string;
+  parentRoleSlug?: string | null;
+  permissions?: string[];
+  slug: string;
+};
+export type LocalizationModuleEntry = { files?: string; languages: string[]; name: string; publish?: "once" | "none" };
 
 export type ProjectDocument = {
   $schema?: string;
   schemaVersion: number;
   project?: { tenantId?: string; name?: string };
   data?: { schemas?: string; rules?: string; newSchemaAccess?: "user" | "public" };
+  iam?: { permissions?: IamPermissionEntry[]; roles?: IamRoleEntry[] };
+  localization?: { modules?: LocalizationModuleEntry[] };
   secrets?: { required?: string[] };
 } & Partial<Record<(typeof RESERVED_AREAS)[number], Record<string, unknown>>>;
 

@@ -63,11 +63,35 @@
         }
       }
     },
-    "iam": { "$ref": "#/$defs/reservedArea" },
+    "iam": {
+      "description": "IAM permissions and roles (0007 build step 3). Permissions are keyed by name, roles by slug. A role's permissions list names permissions (as 'name' of an iam.permissions entry or of an existing permission) or their 'module::resource' identifiers; apply only adds them, never removes. Roles and permissions the file omits are reported as 'not in file' and never deleted. OIDC clients belong to the auth area.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "permissions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/iamPermission" }
+        },
+        "roles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/iamRole" }
+        }
+      }
+    },
     "auth": { "$ref": "#/$defs/reservedArea" },
     "mail": { "$ref": "#/$defs/reservedArea" },
     "storage": { "$ref": "#/$defs/reservedArea" },
-    "localization": { "$ref": "#/$defs/reservedArea" },
+    "localization": {
+      "description": "Translation dictionaries (0007 build step 3), one JSON file per module and language, as 'blocks localization pull' writes them. Keys the file omits are never deleted.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/localizationModule" }
+        }
+      }
+    },
     "logic": { "$ref": "#/$defs/reservedArea" }
   },
   "$defs": {
@@ -83,6 +107,52 @@
       "required": ["secretRef"],
       "properties": {
         "secretRef": { "$ref": "#/$defs/secretName" }
+      }
+    },
+    "iamPermission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "resource": { "description": "The 'module::resource' identifier.", "type": "string", "minLength": 1 },
+        "resourceGroup": { "type": "string", "minLength": 1 },
+        "type": { "type": "integer" },
+        "severity": { "description": "The permission severity (permissionSeverity).", "type": "integer" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "dependentPermissions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "iamRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slug"],
+      "properties": {
+        "slug": { "type": "string", "minLength": 1 },
+        "name": { "description": "Required to create the role.", "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "parentRoleSlug": { "type": ["string", "null"] },
+        "canCreateOwn": { "type": "boolean" },
+        "permissions": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "localizationModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "languages"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "languages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "files": {
+          "description": "Path pattern relative to the project file, with {module} and {language}. Omitted: the workspace's dictionaries folder, as 'localization push' uses.",
+          "type": "string",
+          "minLength": 1
+        },
+        "publish": {
+          "description": "once (default): regenerate the module's UILM file once after all its languages are saved. none: save only.",
+          "enum": ["once", "none"]
+        }
       }
     },
     "reservedArea": {

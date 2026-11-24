@@ -25,6 +25,8 @@ export type Journal = {
   reloadPending: boolean;
   startedAt: string;
   tenant: string;
+  /** Localization modules whose keys were saved but whose UILM file was not regenerated yet (publish once). */
+  uilmPending?: string[];
   version: 1;
 };
 

@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased (local patch series, decision 0007 steps 1 and 2)
+## Unreleased (local patch series, decision 0007 steps 1 to 3)
+
+### Added (step 3)
+
+- **`blocks plan` and `blocks apply` cover the `iam` and `localization` areas** (after `data`).
+  - `iam.permissions` are keyed by name, `iam.roles` by slug (name, description, parent, `canCreateOwn`, and a `permissions` list of names or `module::resource`). Apply creates permissions, then roles parents first, then adds a role's missing permissions. It never removes a permission from a role and never deletes a role or permission; a role naming a permission that exists nowhere is blocked.
+  - `localization.modules` name a module, its languages and (optionally) a `files` pattern. Plan compares each dictionary file with the stored keys (key names only, never values). Apply saves only the differing keys, unpublished, keeping the other cultures, then regenerates each touched module's UILM file once (`publish: none` skips it; a failed regeneration is kept in the journal and finished by the next run).
+  - The project file schema now checks unknown keys in both sections. The plan's read-only guard allows read-style POSTs on three exact paths (the IAM role and permission lists and the key lookup); every other POST stays refused.
+  - OIDC clients belong to the `auth` area (next step).
 
 ### Added (step 2)
 
