@@ -2,6 +2,7 @@ import { access, readFile } from "node:fs/promises";
 import { inspect } from "node:util";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import type { AuthConfigEntry } from "./auth-config.js";
+import type { StorageConfigEntry } from "./storage-config.js";
 import type { OidcClientEntry } from "./oidc-config.js";
 import { CliActionableError } from "./errors.js";
 import { validateJsonSchema, type JsonSchema } from "./json-schema-lite.js";
@@ -29,8 +30,8 @@ export const PROJECT_FILE_BASENAME = "blocks.project";
 export const PROJECT_FILE_EXTENSIONS = [".yaml", ".yml", ".json"] as const;
 export const SUPPORTED_SCHEMA_VERSION = 1;
 
-export const MANAGED_AREAS = ["data", "iam", "auth", "localization"] as const;
-export const RESERVED_AREAS = ["mail", "storage", "logic"] as const;
+export const MANAGED_AREAS = ["data", "iam", "auth", "storage", "localization"] as const;
+export const RESERVED_AREAS = ["mail", "logic"] as const;
 
 export type IamPermissionEntry = {
   dependentPermissions?: string[];
@@ -58,6 +59,7 @@ export type ProjectDocument = {
   project?: { tenantId?: string; name?: string };
   data?: { schemas?: string; rules?: string; newSchemaAccess?: "user" | "public" };
   auth?: { config?: AuthConfigEntry; oidcClients?: OidcClientEntry[] };
+  storage?: { configs?: StorageConfigEntry[] };
   iam?: { permissions?: IamPermissionEntry[]; roles?: IamRoleEntry[] };
   localization?: { modules?: LocalizationModuleEntry[] };
   secrets?: { required?: string[] };

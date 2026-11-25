@@ -140,7 +140,29 @@
       }
     },
     "mail": { "$ref": "#/$defs/reservedArea" },
-    "storage": { "$ref": "#/$defs/reservedArea" },
+    "storage": {
+      "description": "Storage configurations (0007 build step 4). Apply manages only the upload settings of a configuration that already exists: provider and credentials are fixed once it exists and never go in the file. A configuration the project lacks is reported as blocked; create it once with 'blocks storage config save'. Never created or deleted by apply.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "configs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "storageStrategy": { "type": "string", "minLength": 1 },
+              "downloadUrlExpirySeconds": { "type": "integer", "minimum": 0 },
+              "maxFileSizeInBytes": { "type": "integer", "minimum": 0 },
+              "uploadCompletionRequiredFor": { "type": "array", "items": { "type": "string" } },
+              "uploadUrlExpirySeconds": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
     "localization": {
       "description": "Translation dictionaries (0007 build step 3), one JSON file per module and language, as 'blocks localization pull' writes them. Keys the file omits are never deleted.",
       "type": "object",
