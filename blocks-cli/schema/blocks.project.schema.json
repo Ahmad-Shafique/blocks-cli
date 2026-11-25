@@ -79,7 +79,7 @@
       }
     },
     "auth": {
-      "description": "Authentication settings (0007 build step 4). Only config is managed so far: the AuthController document (token lifetimes, lockout, password policy, OIDC on or off). Only the keys you state are compared and written. OIDC clients, identity providers, mail, storage and workflows follow in later steps.",
+      "description": "Authentication settings (0007 build step 4). Config and oidcClients are managed so far: config is the AuthController document (token lifetimes, lockout, password policy, OIDC on or off). Only the keys you state are compared and written. Identity providers, mail, storage and workflows follow in later steps.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -105,6 +105,36 @@
             "refreshTokenMinutes": { "type": "integer", "minimum": 0 },
             "rememberMeRefreshTokenMinutes": { "type": "integer", "minimum": 0 },
             "wrongAttemptsToLock": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "oidcClients": {
+          "description": "OIDC clients, keyed by name (the client display name). Never holds a client secret: a new client's secret is shown once by the server and is not kept; use auth oidc-clients rotate-secret. Apply creates and updates, never deletes.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "allowedMfaMethods": { "type": "array", "items": { "type": "integer" } },
+              "allowedResponseTypes": { "type": "array", "items": { "type": "string" } },
+              "allowedScopes": { "type": "array", "items": { "type": "string" } },
+              "backChannelLogoutUri": { "type": "string" },
+              "clientType": { "type": "string", "minLength": 1 },
+              "externalDiscoveryEndpoint": { "type": "string" },
+              "frontChannelLogoutUri": { "type": "string" },
+              "isActive": { "type": "boolean" },
+              "isAutoRedirect": { "type": "boolean" },
+              "isDeviceFlowClient": { "type": "boolean" },
+              "loginMode": { "type": "string" },
+              "postLogoutRedirectUris": { "type": "array", "items": { "type": "string" } },
+              "redirectUris": { "type": "array", "items": { "type": "string" } },
+              "registerAsIdentityProvider": { "type": "boolean" },
+              "requireConsent": { "type": "boolean" },
+              "requireMfa": { "type": "boolean" },
+              "requirePkce": { "type": "boolean" },
+              "useTokensCookie": { "type": "boolean" }
+            }
           }
         }
       }

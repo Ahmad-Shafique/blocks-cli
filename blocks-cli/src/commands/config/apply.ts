@@ -11,6 +11,7 @@ import { CliActionableError } from "../../lib/errors.js";
 import { addRolePermissions, iamIdsBySlugAndName, rolesParentsFirst, writePermission, writeRole } from "../../lib/iam-config.js";
 import { regenerateModule, writeDictionary } from "../../lib/localization-config.js";
 import { writeAuthConfig } from "../../lib/auth-config.js";
+import { writeOidcClient } from "../../lib/oidc-config.js";
 import { loadProjectFile, MANAGED_AREAS, RESERVED_AREAS } from "../../lib/project-file.js";
 import {
   hasChanges,
@@ -233,7 +234,7 @@ async function writeAll(
     const failure = await writeData(plans.data, itemsOf("data"), tenant, flags, makeRunner("data", journal, logsDir, counters.data));
     if (failure) return outcome(failure);
   }
-  if (plans.auth) {
+  if (plans.auth || plans.oidc) {
     const failure = await writeAuth(plans, itemsOf("auth"), tenant, flags, makeRunner("auth", journal, logsDir, counters.auth));
     if (failure) return outcome(failure);
   }
@@ -280,8 +281,21 @@ async function writeIam(plans: AreaPlans, toWrite: PlanItem[], tenant: string, f
 async function writeAuth(plans: AreaPlans, toWrite: PlanItem[], tenant: string, flags: Flags, run: Runner): Promise<Failure> {
   const auth = plans.auth;
   const item = toWrite.find((candidate) => candidate.kind === "config");
-  if (!auth || !item) return undefined;
-  return run(item, () => writeAuthConfig(auth.desired, flags, tenant));
+  if (auth && item) {
+    const failed = await run(item, () => writeAuthConfig(auth.desired, flags, tenant));
+    if (failed) return failed;
+  }
+  const oidc = plans.oidc;
+  if (!oidc) return undefined;
+  const clients = new Map(toWrite.filter((candidate) => candidate.kind === "oidcClient").map((candidate) => [candidate.name, candidate]));
+  for (const entry of oidc.desired) {
+    const clientItem = clients.get(entry.name);
+    if (!clientItem) continue;
+    const existing = clientItem.action === "update" ? oidc.live.find((row) => row.clientDisplayName === entry.name) : undefined;
+    const failed = await run(clientItem, () => writeOidcClient(entry, existing, flags, tenant));
+    if (failed) return failed;
+  }
+  return undefined;
 }
 
 /** Saves each differing dictionary unpublished, and remembers which modules need a UILM regeneration. */
