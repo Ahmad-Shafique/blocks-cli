@@ -30,7 +30,7 @@ test("the schema checks auth.config types and unknown keys", async () => {
   assert.ok(validateProjectDocument({ schemaVersion: 1, auth: { config: { oidcEnabled: "yes" } } }, schema).length > 0);
   assert.ok(validateProjectDocument({ schemaVersion: 1, auth: { config: { accessTokenMinutes: -1 } } }, schema).length > 0);
   assert.ok(validateProjectDocument({ schemaVersion: 1, auth: { config: { colour: "red" } } }, schema).length > 0);
-  assert.ok(validateProjectDocument({ schemaVersion: 1, auth: { oidcClients: [] } }, schema).length > 0, "oidcClients is not managed yet");
+  assert.ok(validateProjectDocument({ schemaVersion: 1, auth: { identityProviders: [] } }, schema).length > 0, "identityProviders is not managed yet");
 });
 
 test("diffAuthConfig compares only the stated keys, by the file's own names", () => {
