@@ -2,6 +2,11 @@
 
 ## Unreleased (local patch series, decision 0007 steps 1 to 4)
 
+### Fixed (I14-WP13, found by the plan/apply cycle on blocks-selfhost)
+
+- A permission's `resource` compares case-insensitively (the server stores it lower-cased, so a file value such as `Test::Wp13::Read` was reported as an update forever).
+- The server's access-policy fields on a stored schema (`Create`, `Read`, `Update`, `Delete`, `Roles`, `UserIds`, `Permissions`) are treated as system fields: they were listed as `(removed)` and `blocks apply` never reached "no changes".
+
 ### Added (step 4, third part)
 
 - **`blocks plan` and `blocks apply` cover `storage.configs`.** Storage configurations keyed by name. Apply writes only the four upload settings of a configuration that already exists (provider and credentials are fixed once it exists and never go in the file). A configuration the file names but the project lacks, or a changed `storageStrategy`, is reported as blocked; apply never creates or deletes one. Mail and workflows follow.
