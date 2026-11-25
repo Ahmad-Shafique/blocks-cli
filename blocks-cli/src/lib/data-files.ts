@@ -22,7 +22,16 @@ const SYSTEM_FIELDS = new Set([
   "LastUpdatedBy",
   "Language",
   "OrganizationId",
-  "Tags"
+  "Tags",
+  // The server also adds its access-policy fields to every schema it stores (seen on blocks-selfhost, I14-WP13);
+  // without them here the plan reported each as "(removed)" and apply never reached "no changes".
+  "Create",
+  "Read",
+  "Update",
+  "Delete",
+  "Roles",
+  "UserIds",
+  "Permissions"
 ]);
 
 // Non-portable schema-level metadata: server id, project identifiers, generated

@@ -89,13 +89,18 @@ function sortedStrings(value: unknown): string[] | undefined {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").sort() : undefined;
 }
 
+/** The server stores a permission's resource in lower case ('Test::Wp13::Read' reads back 'test::wp13::read'), so both sides compare lower-cased (I14-WP13). */
+function lowerResource(value: unknown): unknown {
+  return typeof value === "string" ? value.toLowerCase() : value;
+}
+
 function livePermissionView(row: Row): Row {
   return {
     dependentPermissions: sortedStrings(row.dependentPermissions),
     description: row.description,
     name: row.name,
     permissionSeverity: row.permissionSeverity,
-    resource: row.resource,
+    resource: lowerResource(row.resource),
     resourceGroup: row.resourceGroup,
     tags: sortedStrings(row.tags),
     type: row.type
@@ -105,7 +110,7 @@ function livePermissionView(row: Row): Row {
 function desiredPermissionView(entry: IamPermissionEntry): Row {
   const view: Row = {};
   if (entry.description !== undefined) view.description = entry.description;
-  if (entry.resource !== undefined) view.resource = entry.resource;
+  if (entry.resource !== undefined) view.resource = lowerResource(entry.resource);
   if (entry.resourceGroup !== undefined) view.resourceGroup = entry.resourceGroup;
   if (entry.type !== undefined) view.type = entry.type;
   if (entry.severity !== undefined) view.permissionSeverity = entry.severity;
