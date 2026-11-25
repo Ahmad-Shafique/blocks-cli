@@ -1,4 +1,5 @@
 import { computeAuthPlan, type AuthPlan } from "./auth-config.js";
+import { computeStoragePlan, type StoragePlan } from "./storage-config.js";
 import { computeOidcPlan, type OidcPlan } from "./oidc-config.js";
 import { computeDataPlan, type DataPlan } from "./data-plan.js";
 import { computeIamPlan, type IamPlan } from "./iam-config.js";
@@ -22,9 +23,10 @@ export type AreaPlans = {
   items: PlanItem[];
   localization?: LocalizationPlan;
   oidc?: OidcPlan;
+  storage?: StoragePlan;
 };
 
-export const AREA_ORDER: readonly ManagedArea[] = ["iam", "data", "auth", "localization"];
+export const AREA_ORDER: readonly ManagedArea[] = ["iam", "data", "auth", "storage", "localization"];
 
 export function managedAreas(document: LoadedProjectFile["document"]): ManagedArea[] {
   return AREA_ORDER.filter((area) => document[area] !== undefined);
@@ -55,6 +57,10 @@ export async function computeAreaPlans(
   if (document.auth?.oidcClients) {
     plans.oidc = await computeOidcPlan(flags, tenant, document.auth.oidcClients);
     plans.items.push(...plans.oidc.items);
+  }
+  if (document.storage?.configs) {
+    plans.storage = await computeStoragePlan(flags, tenant, document.storage.configs);
+    plans.items.push(...plans.storage.items);
   }
   if (document.localization) {
     const workspace = await findWorkspace();

@@ -2,6 +2,10 @@
 
 ## Unreleased (local patch series, decision 0007 steps 1 to 4)
 
+### Added (step 4, third part)
+
+- **`blocks plan` and `blocks apply` cover `storage.configs`.** Storage configurations keyed by name. Apply writes only the four upload settings of a configuration that already exists (provider and credentials are fixed once it exists and never go in the file). A configuration the file names but the project lacks, or a changed `storageStrategy`, is reported as blocked; apply never creates or deletes one. Mail and workflows follow.
+
 ### Added (step 4, first part)
 
 - **`blocks plan` and `blocks apply` cover `auth.config`.** The AuthController document (token lifetimes, lockout, password policy, OIDC on or off), keyed by the file's own names (`oidcEnabled`, `accessTokenMinutes`, `passwordPolicyMinLength` and so on). Only stated keys are compared and written; apply merges them over the stored document and saves once, and turning OIDC on points the activation path and base URL as `auth config save` does. OIDC clients, mail, storage and workflows follow.

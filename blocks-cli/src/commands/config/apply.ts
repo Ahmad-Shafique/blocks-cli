@@ -11,6 +11,7 @@ import { CliActionableError } from "../../lib/errors.js";
 import { addRolePermissions, iamIdsBySlugAndName, rolesParentsFirst, writePermission, writeRole } from "../../lib/iam-config.js";
 import { regenerateModule, writeDictionary } from "../../lib/localization-config.js";
 import { writeAuthConfig } from "../../lib/auth-config.js";
+import { writeStorageConfig } from "../../lib/storage-config.js";
 import { writeOidcClient } from "../../lib/oidc-config.js";
 import { loadProjectFile, MANAGED_AREAS, RESERVED_AREAS } from "../../lib/project-file.js";
 import {
@@ -218,11 +219,11 @@ async function writeAll(
   journal: Journal,
   logsDir: string
 ): Promise<WriteOutcome> {
-  const counters = { auth: { wrote: 0 }, data: { wrote: 0 }, iam: { wrote: 0 }, localization: { wrote: 0 } };
+  const counters = { auth: { wrote: 0 }, storage: { wrote: 0 }, data: { wrote: 0 }, iam: { wrote: 0 }, localization: { wrote: 0 } };
   const outcome = (failure?: Failure): WriteOutcome => ({
     dataWrote: counters.data.wrote,
     ...(failure ? { failure } : {}),
-    wrote: counters.data.wrote + counters.iam.wrote + counters.auth.wrote + counters.localization.wrote
+    wrote: counters.data.wrote + counters.iam.wrote + counters.auth.wrote + counters.storage.wrote + counters.localization.wrote
   });
   const itemsOf = (area: PlanItem["area"]) => toWrite.filter((item) => item.area === area);
 
@@ -236,6 +237,10 @@ async function writeAll(
   }
   if (plans.auth || plans.oidc) {
     const failure = await writeAuth(plans, itemsOf("auth"), tenant, flags, makeRunner("auth", journal, logsDir, counters.auth));
+    if (failure) return outcome(failure);
+  }
+  if (plans.storage) {
+    const failure = await writeStorage(plans, itemsOf("storage"), tenant, flags, makeRunner("storage", journal, logsDir, counters.storage));
     if (failure) return outcome(failure);
   }
   if (plans.localization) {
@@ -293,6 +298,21 @@ async function writeAuth(plans: AreaPlans, toWrite: PlanItem[], tenant: string, 
     if (!clientItem) continue;
     const existing = clientItem.action === "update" ? oidc.live.find((row) => row.clientDisplayName === entry.name) : undefined;
     const failed = await run(clientItem, () => writeOidcClient(entry, existing, flags, tenant));
+    if (failed) return failed;
+  }
+  return undefined;
+}
+
+/** Storage configurations: only the upload settings of an existing one; a missing one is blocked in the plan and never reaches here. */
+async function writeStorage(plans: AreaPlans, toWrite: PlanItem[], tenant: string, flags: Flags, run: Runner): Promise<Failure> {
+  const storage = plans.storage;
+  if (!storage) return undefined;
+  const updates = new Map(toWrite.filter((candidate) => candidate.kind === "storageConfig" && candidate.action === "update").map((candidate) => [candidate.name, candidate]));
+  for (const entry of storage.desired) {
+    const item = updates.get(entry.name);
+    const existing = storage.live.find((row) => row.name === entry.name);
+    if (!item || !existing) continue;
+    const failed = await run(item, () => writeStorageConfig(entry, existing, flags, tenant));
     if (failed) return failed;
   }
   return undefined;
